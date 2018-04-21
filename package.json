@@ -1,0 +1,19 @@
+{
+  "name": "videobooth",
+  "version": "1.0.0",
+  "description": "A MAZE. video booth",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dotKokott/Videobooth.git"
+  },
+  "author": "Christian Kokott",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/dotKokott/Videobooth/issues"
+  },
+  "homepage": "https://github.com/dotKokott/Videobooth#readme"
+}
