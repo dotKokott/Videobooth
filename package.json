@@ -15,5 +15,10 @@
   "bugs": {
     "url": "https://github.com/dotKokott/Videobooth/issues"
   },
-  "homepage": "https://github.com/dotKokott/Videobooth#readme"
+  "homepage": "https://github.com/dotKokott/Videobooth#readme",
+  "dependencies": {
+    "express": "^4.16.3",
+    "johnny-five": "^0.14.3",
+    "socket.io": "^2.1.0"
+  }
 }
