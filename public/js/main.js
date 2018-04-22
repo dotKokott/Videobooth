@@ -1,5 +1,6 @@
 var $ = require("jquery");
 var RecordRTC = require('recordrtc');
+var socketio = io();
 
 var rtc;
 var videoElement = $('#video')[0];
@@ -7,6 +8,16 @@ var videoElement = $('#video')[0];
 var recordingLength = 5 * 1000;
 
 var uploadURL = 'https://webmshare.com/api/upload';
+
+socketio.on('connect', function() {
+    console.log('IO connected');
+});
+
+socketio.on('uploaded', function(url) {
+    // var href = (location.href.split('/').pop().length ? location.href.replace(location.href.split('/').pop(), '') : location.href);
+    // href = href + 'uploads/' + filename;
+    console.log('got file ' + url);
+});
 
 function startRecording(stream) {
     var options = {
@@ -28,31 +39,35 @@ function stopRecording() {
         videoElement.src = url;
         videoElement.play();
 
+        rtc.getDataURL(function(dataURL) {
+            uploadVideoToServer(dataURL);
+        });        
+
         rtc.clearRecordedData();
-    });
+    });    
 }
 
-function uploadVideoToServer() {
-    // var req = new XMLHttpRequest();
-    // req.open("POST", uploadURL, true);
-    // req.onload = function(event) {
-    //     console.log('uploaded');
-    // }
+function uploadVideoToServer(url) {
+    // var fd = new FormData();
+    // // fd.append('fname', 'test.wav');
+    // fd.append('data', soundBlob);  
+    // $.ajax({
+    //     type: 'POST',
+    //     url: uploadURL,
+    //     data: fd,
+    //     processData: false,
+    //     contentType: false        
+    // }).done(function(data) {
+    //     console.log(data);
+    // })
+    var file = {
+        video: {
+            type: rtc.getBlob().type || 'video/webm',
+            dataURL: url
+        }
+    };
 
-    // var blob = n
-
-    var fd = new FormData();
-    // fd.append('fname', 'test.wav');
-    fd.append('data', soundBlob);  
-    $.ajax({
-        type: 'POST',
-        url: uploadURL,
-        data: fd,
-        processData: false,
-        contentType: false        
-    }).done(function(data) {
-        console.log(data);
-    })
+    socketio.emit('message', file);
 }
 
 function errorCallback(error) {
@@ -82,7 +97,6 @@ $(document).keydown(function(e) {
     
     if(!isRecording) {
         isRecording = true;
-        console.log("START");
         startRecording(stream);
     }
 
