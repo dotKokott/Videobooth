@@ -41,7 +41,12 @@ function uploadToProvider(filePath, callback) {
         multipart: true,
         data: {            
             "file": restler.file(filePath, null, stats.size, null, "video/webm"),
-            "expiration": "1"
+            "expiration": "180",
+            "public": "0",
+            "title": "A MAZE VIDEO BOOTH",
+            "autoplay": "1",
+            "loop": "1",
+            "muted": "0"          
         }
     }).on("complete", function(data) {
         callback('https://webmshare.com/' + data.id);        

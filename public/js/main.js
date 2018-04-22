@@ -7,7 +7,7 @@ var videoElement = $('#video')[0];
 
 var recordingLength = 5 * 1000;
 
-var uploadURL = 'https://webmshare.com/api/upload';
+const UPLOAD = false;
 
 socketio.on('connect', function() {
     console.log('IO connected');
@@ -29,37 +29,49 @@ function startRecording(stream) {
     };
 
     rtc = RecordRTC(stream, options);
+
+    rtc.setRecordingDuration(recordingLength).onRecordingStopped(function(url) {
+        isRecording = false;
+        videoElement.srcObject = null;
+        videoElement.src = url;
+        videoElement.muted = false;
+        videoElement.play();
+
+        if(UPLOAD) {
+            rtc.getDataURL(function(dataURL) {
+                uploadVideoToServer(dataURL);
+            }); 
+        } else {
+            console.log("!!!!!HEY NOT UPLOADING!!!!");
+        }
+
+        rtc.clearRecordedData();        
+    });
+
     rtc.startRecording();
 }
 
 function stopRecording() {    
     rtc.stopRecording(function (url) {
-        isRecording = false;
-        videoElement.srcObject = null;
-        videoElement.src = url;
-        videoElement.play();
+        // isRecording = false;
+        // videoElement.srcObject = null;
+        // videoElement.src = url;
+        // videoElement.muted = false;
+        // videoElement.play();
 
-        rtc.getDataURL(function(dataURL) {
-            uploadVideoToServer(dataURL);
-        });        
+        // if(UPLOAD) {
+        //     rtc.getDataURL(function(dataURL) {
+        //         uploadVideoToServer(dataURL);
+        //     }); 
+        // } else {
+        //     console.log("!!!!!HEY NOT UPLOADING!!!!");
+        // }
 
-        rtc.clearRecordedData();
+        // rtc.clearRecordedData();
     });    
 }
 
 function uploadVideoToServer(url) {
-    // var fd = new FormData();
-    // // fd.append('fname', 'test.wav');
-    // fd.append('data', soundBlob);  
-    // $.ajax({
-    //     type: 'POST',
-    //     url: uploadURL,
-    //     data: fd,
-    //     processData: false,
-    //     contentType: false        
-    // }).done(function(data) {
-    //     console.log(data);
-    // })
     var file = {
         video: {
             type: rtc.getBlob().type || 'video/webm',
@@ -83,7 +95,7 @@ navigator.mediaDevices.getUserMedia(mediaConstraints).then(function(result) {
 });
 
 function init() {
-
+    videoElement.muted = true;
 }
 
 $( document ).ready(function() {
@@ -93,12 +105,23 @@ $( document ).ready(function() {
 var isRecording = false;
 
 $(document).keydown(function(e) {    
-    if(e.keyCode != 13) return;
-    
-    if(!isRecording) {
-        isRecording = true;
-        startRecording(stream);
+    if(e.keyCode == 13) {
+        if(!isRecording) {
+            isRecording = true;
+            startRecording(stream);
+        } else {
+            stopRecording();
+        }
     }
+    
+    if(e.keyCode == 32) {
+        if(rtc.state === 'paused') {
+            rtc.resumeRecording();
+        } else {
+            rtc.pauseRecording();
+        }
+    }
+  
 
-    setTimeout(stopRecording, recordingLength);    
+    // setTimeout(stopRecording, recordingLength);    
 });
