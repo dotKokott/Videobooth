@@ -23,6 +23,7 @@
     "johnny-five": "^0.14.3",
     "jquery": "^3.3.1",
     "recordrtc": "^5.4.6",
+    "recordrtc-nodejs": "^1.0.6",
     "socket.io": "^2.1.0",
     "watchify": "^3.11.0"
   }
