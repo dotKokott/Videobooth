@@ -2,11 +2,12 @@ var $ = require("jquery");
 var RecordRTC = require('recordrtc');
 var socketio = io();
 var THREE = require('three');
-var pp = require('postprocessing');
 
 var rtc;
 var videoElement = $('#video')[0];
 var canvasElement;
+
+var linkElement = $('#link');
 
 var recordingLength = 5 * 1000;
 
@@ -19,7 +20,9 @@ socketio.on('connect', function() {
 socketio.on('uploaded', function(url) {
     // var href = (location.href.split('/').pop().length ? location.href.replace(location.href.split('/').pop(), '') : location.href);
     // href = href + 'uploads/' + filename;
-    console.log('got file ' + url);
+    linkElement.text(url);
+    linkElement.toggle();
+    // console.log('got file ' + url);
 });
 
 function startRecording(stream) {
@@ -186,6 +189,7 @@ THREE.MirrorShader = {
 function init() {
     var W = window.innerWidth, H = window.innerHeight;
     videoElement.muted = true;
+    linkElement.toggle();
 
     scene = new THREE.Scene();
     camera = new THREE.OrthographicCamera(W / -2, W / 2,  H / 2, H / -2, -100, 100);
@@ -228,7 +232,7 @@ function init() {
 }
 
 function setRandomMirror() {
-    material.uniforms.side.value = THREE.Math.randInt(0, 8);
+    material.uniforms.side.value = THREE.Math.randInt(0, 7);
     // console.log(material.uniforms["side"]);
 }
 
@@ -260,5 +264,7 @@ $(document).keydown(function(e) {
         rtc.pauseRecording();
     } else if(rtc.state === 'paused') {
         rtc.resumeRecording();
+    } else if(rtc.state === 'stopped') {
+        init();
     }
 });

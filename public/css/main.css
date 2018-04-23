@@ -2,8 +2,15 @@ body {
     background-color: black;
     margin: 0;
     padding: 0;
+    overflow: hidden;
 }
 
 video {
     display:none;
+ }
+
+ #link {
+     color: white;
+     text-align: center;
+     font-size: 2em;
  }
