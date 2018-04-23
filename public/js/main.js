@@ -10,7 +10,7 @@ var canvasElement;
 
 var recordingLength = 5 * 1000;
 
-const UPLOAD = false;
+const UPLOAD = true;
 
 socketio.on('connect', function() {
     console.log('IO connected');
@@ -23,41 +23,47 @@ socketio.on('uploaded', function(url) {
 });
 
 function startRecording(stream) {
-    var options = {
-        // recorderType: MediaStreamRecorder,
-        mimeType: 'video/webm\;codecs=vp9',
-        bitsPerSecond: 256 * 8 * 1024,
-        checkForInactiveTracks: true
-    };
+    // rtc = RecordRTC(stream, {
+    //     type: 'video'
+    // })
 
-    rtc = RecordRTC(stream, options);
 
-    rtc.setRecordingDuration(recordingLength).onRecordingStopped(function(url) {
-        isRecording = false;
-        videoElement.srcObject = null;
-        videoElement.src = url;
-        videoElement.muted = false;
-        videoElement.play();
+    // // var options = {
+    // //     // recorderType: MediaStreamRecorder,
+    // //     mimeType: 'video/webm\;codecs=vp9',
+    // //     bitsPerSecond: 256 * 8 * 1024,
+    // //     checkForInactiveTracks: true
+    // // };
 
-        if(UPLOAD) {
-            rtc.getDataURL(function(dataURL) {
-                uploadVideoToServer(dataURL);
-            }); 
-        } else {
-            console.log("!!!!!HEY NOT UPLOADING!!!!");
-        }
+    // // rtc = RecordRTC(stream, options);
 
-        rtc.clearRecordedData();        
-    });
+    // rtc.setRecordingDuration(recordingLength).onRecordingStopped(function(url) {
+    //     isRecording = false;
+    //     videoElement.srcObject = null;
+    //     videoElement.src = url;
+    //     videoElement.muted = false;
+    //     videoElement.play();
 
-    rtc.startRecording();
+    //     if(UPLOAD) {
+    //         rtc.getDataURL(function(dataURL) {
+    //             uploadVideoToServer(dataURL);
+    //         }); 
+    //     } else {
+    //         console.log("!!!!!HEY NOT UPLOADING!!!!");
+    //     }
+
+    //     rtc.clearRecordedData();        
+    // });
+
+    // rtc.startRecording();
 }
 
 function recordCanvas() {
-    console.log(renderer.domElement);
-
-    rtc = RecordRTC(renderer.domElement, {
-        type: 'canvas',
+    rtc = RecordRTC(finalStream, {
+        type: 'video',
+        mimeType: 'video/webm\;codecs=vp9',
+        checkForInactiveTracks: true,
+        bitsPerSecond: 256 * 8 * 1024,
         showMousePointer: false
     });
 
@@ -99,11 +105,18 @@ function errorCallback(error) {
 }
 
 var mediaConstraints = { video: true, audio: true };
-var stream;
+var finalStream;
 navigator.mediaDevices.getUserMedia(mediaConstraints).then(function(result) { 
-    stream = result; 
-    //videoElement.src = window.URL.createObjectURL(result);
     videoElement.srcObject = result;
+
+    finalStream = new MediaStream();
+    var canvasStream = renderer.domElement.captureStream();
+    result.getAudioTracks().forEach(function(track) {
+        finalStream.addTrack(track);
+    });
+    canvasStream.getVideoTracks().forEach(function(track) {
+        finalStream.addTrack(track);
+    });      
 });
 
 var camera, scene, renderer;
@@ -147,6 +160,18 @@ THREE.MirrorShader = {
                 "if (p.y < 0.5) p.y = 1.0 - p.y;",
             "}else if (side == 3){",
                 "if (p.y > 0.5) p.y = 1.0 - p.y;",
+            "}else if (side == 4){",
+                "if (p.y > 0.5) p.y = 1.0 - p.y;",                
+                "if (p.x < 0.5) p.x = 1.0 - p.x;",               
+            "}else if (side == 5){",
+                "if (p.y < 0.5) p.y = 1.0 - p.y;",                
+                "if (p.x > 0.5) p.x = 1.0 - p.x;",                      
+            "}else if (side == 6){",
+                "if (p.y > 0.5) p.y = 1.0 - p.y;",                
+                "if (p.x > 0.5) p.x = 1.0 - p.x;",                  
+            "}else if (side == 7){",
+                "if (p.y < 0.5) p.y = 1.0 - p.y;",                
+                "if (p.x < 0.5) p.x = 1.0 - p.x;",                
             "} ",
             "vec4 color = texture2D(tDiffuse, p);",
             
@@ -172,14 +197,12 @@ function init() {
     texture.magFilter = THREE.LinearFilter;
     texture.format = THREE.RGBFormat;
 
-    // material = new THREE.MeshBasicMaterial({map: texture});   
-
     material = new THREE.ShaderMaterial( {
 
         uniforms: {
 
             "tDiffuse": { type: "t", value: texture },
-            "side":     { value: 2 }
+            "side":     { value: 7 }
     
         },
     
@@ -199,23 +222,7 @@ function init() {
     window.addEventListener( 'resize', onWindowResize, false );
 
     renderer.setSize( window.innerWidth, window.innerHeight );
-    document.body.appendChild( renderer.domElement );  
-    
-    // var renderPass = new pp.RenderPass( scene, camera );
-    // mirrorPass = new pp.ShaderPass( THREE.MirrorShader ); 
-
-    // var effectCopy = new pp.ShaderPass(pp.CopyShader);
-    // effectCopy.renderToScreen = true;    
-    // console.log(mirrorPass);
-    // composer = new pp.EffectComposer( renderer);
-    // composer.addPass( renderPass );
-    // composer.addPass( mirrorPass );  
-    // composer.addPass( effectCopy ); 
-    
-
-    
-    
-    
+    document.body.appendChild( renderer.domElement );    
 }
 
 function onWindowResize() {
@@ -225,11 +232,8 @@ function onWindowResize() {
 }
 
 function draw() {
-    // mirrorPass.material.uniforms[ "side" ].value = 0;
-    texture.needsUpdate = true;
     requestAnimationFrame( draw );
     renderer.render( scene, camera );    
-    // composer.render( 0.1);
 }
 
 $( document ).ready(function() {

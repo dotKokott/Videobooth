@@ -37,19 +37,22 @@ io.sockets.on('connection', function(socket) {
 
 function uploadToProvider(filePath, callback) {
   fs.stat(filePath, function(err, stats) {
-    restler.post("https://webmshare.com/api/upload", {
+    restler.post("https://api.streamable.com/upload", {
         multipart: true,
+        username: 'christian.kokott@gmail.com',
+        password: 'stealitifyouwant',
         data: {            
             "file": restler.file(filePath, null, stats.size, null, "video/webm"),
-            "expiration": "180",
-            "public": "0",
-            "title": "A MAZE VIDEO BOOTH",
-            "autoplay": "1",
-            "loop": "1",
-            "muted": "0"          
+            // "expiration": "180",
+            // "public": "0",
+            // "title": "A MAZE VIDEO BOOTH",
+            // "autoplay": "1",
+            // "loop": "1",
+            // "muted": "0"          
         }
     }).on("complete", function(data) {
-        callback('https://webmshare.com/' + data.id);        
+        console.log(data);
+        callback('https://streamable.com/' + data.shortcode);        
     });
 });
 }
