@@ -212,6 +212,8 @@ function init() {
     
     } );
 
+    setRandomMirror();
+
     var mesh = new THREE.Mesh( geometry, material );
     scene.add(mesh);
 
@@ -223,6 +225,11 @@ function init() {
 
     renderer.setSize( window.innerWidth, window.innerHeight );
     document.body.appendChild( renderer.domElement );    
+}
+
+function setRandomMirror() {
+    material.uniforms.side.value = THREE.Math.randInt(0, 8);
+    // console.log(material.uniforms["side"]);
 }
 
 function onWindowResize() {

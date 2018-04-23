@@ -51,7 +51,6 @@ function uploadToProvider(filePath, callback) {
             // "muted": "0"          
         }
     }).on("complete", function(data) {
-        console.log(data);
         callback('https://streamable.com/' + data.shortcode);        
     });
 });
