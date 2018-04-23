@@ -1,9 +1,12 @@
 var $ = require("jquery");
 var RecordRTC = require('recordrtc');
 var socketio = io();
+var THREE = require('three');
+var pp = require('postprocessing');
 
 var rtc;
 var videoElement = $('#video')[0];
+var canvasElement;
 
 var recordingLength = 5 * 1000;
 
@@ -25,7 +28,6 @@ function startRecording(stream) {
         mimeType: 'video/webm\;codecs=vp9',
         bitsPerSecond: 256 * 8 * 1024,
         checkForInactiveTracks: true
-        // bitsPerSecond: 128000 // if this line is provided, skip above two
     };
 
     rtc = RecordRTC(stream, options);
@@ -51,25 +53,35 @@ function startRecording(stream) {
     rtc.startRecording();
 }
 
-function stopRecording() {    
-    rtc.stopRecording(function (url) {
-        // isRecording = false;
-        // videoElement.srcObject = null;
-        // videoElement.src = url;
-        // videoElement.muted = false;
-        // videoElement.play();
+function recordCanvas() {
+    console.log(renderer.domElement);
 
-        // if(UPLOAD) {
-        //     rtc.getDataURL(function(dataURL) {
-        //         uploadVideoToServer(dataURL);
-        //     }); 
-        // } else {
-        //     console.log("!!!!!HEY NOT UPLOADING!!!!");
-        // }
+    rtc = RecordRTC(renderer.domElement, {
+        type: 'canvas',
+        showMousePointer: false
+    });
 
-        // rtc.clearRecordedData();
-    });    
+    rtc.setRecordingDuration(recordingLength).onRecordingStopped(function(url) {
+        isRecording = false;
+        videoElement.srcObject = null;
+        videoElement.src = url;
+        videoElement.muted = false;
+        videoElement.play();
+
+        if(UPLOAD) {
+            rtc.getDataURL(function(dataURL) {
+                uploadVideoToServer(dataURL);
+            }); 
+        } else {
+            console.log("!!!!!HEY NOT UPLOADING!!!!");
+        }
+
+        rtc.clearRecordedData();        
+    });
+
+    rtc.startRecording();    
 }
+
 
 function uploadVideoToServer(url) {
     var file = {
@@ -94,34 +106,148 @@ navigator.mediaDevices.getUserMedia(mediaConstraints).then(function(result) {
     videoElement.srcObject = result;
 });
 
+var camera, scene, renderer;
+var geometry, material, mesh;
+var videoTexture;
+var composer;
+var mirrorParams, mirrorPass;			
+
+var lastTime = Date.now();
+
+THREE.MirrorShader = {
+
+    vertexShader: [
+
+        "varying vec2 vUv;",
+
+        "void main() {",
+
+            "vUv = uv;",
+            "gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );",
+
+        "}"
+
+    ].join( "\n" ),
+
+    fragmentShader: [
+
+        "uniform sampler2D tDiffuse;",
+        "uniform int side;",
+        
+        "varying vec2 vUv;",
+
+        "void main() {",
+
+            "vec2 p = vUv;",
+            "if (side == 0){",
+                "if (p.x > 0.5) p.x = 1.0 - p.x;",
+            "}else if (side == 1){",
+                "if (p.x < 0.5) p.x = 1.0 - p.x;",
+            "}else if (side == 2){",
+                "if (p.y < 0.5) p.y = 1.0 - p.y;",
+            "}else if (side == 3){",
+                "if (p.y > 0.5) p.y = 1.0 - p.y;",
+            "} ",
+            "vec4 color = texture2D(tDiffuse, p);",
+            
+            "gl_FragColor = color;",
+
+        "}"
+
+    ].join( "\n" )
+
+}; 
+
 function init() {
+    var W = window.innerWidth, H = window.innerHeight;
     videoElement.muted = true;
+
+    scene = new THREE.Scene();
+    camera = new THREE.OrthographicCamera(W / -2, W / 2,  H / 2, H / -2, -100, 100);
+    geometry = new THREE.PlaneBufferGeometry( W, H );
+    
+
+    texture = new THREE.VideoTexture( videoElement );
+    texture.minFilter = THREE.LinearFilter;
+    texture.magFilter = THREE.LinearFilter;
+    texture.format = THREE.RGBFormat;
+
+    // material = new THREE.MeshBasicMaterial({map: texture});   
+
+    material = new THREE.ShaderMaterial( {
+
+        uniforms: {
+
+            "tDiffuse": { type: "t", value: texture },
+            "side":     { value: 2 }
+    
+        },
+    
+        vertexShader: THREE.MirrorShader.vertexShader,
+    
+        fragmentShader: THREE.MirrorShader.fragmentShader
+    
+    } );
+
+    var mesh = new THREE.Mesh( geometry, material );
+    scene.add(mesh);
+
+    renderer = new THREE.WebGLRenderer( {} );
+    renderer.setPixelRatio( window.devicePixelRatio );
+    renderer.setSize( W, H );
+
+    window.addEventListener( 'resize', onWindowResize, false );
+
+    renderer.setSize( window.innerWidth, window.innerHeight );
+    document.body.appendChild( renderer.domElement );  
+    
+    // var renderPass = new pp.RenderPass( scene, camera );
+    // mirrorPass = new pp.ShaderPass( THREE.MirrorShader ); 
+
+    // var effectCopy = new pp.ShaderPass(pp.CopyShader);
+    // effectCopy.renderToScreen = true;    
+    // console.log(mirrorPass);
+    // composer = new pp.EffectComposer( renderer);
+    // composer.addPass( renderPass );
+    // composer.addPass( mirrorPass );  
+    // composer.addPass( effectCopy ); 
+    
+
+    
+    
+    
+}
+
+function onWindowResize() {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize( window.innerWidth, window.innerHeight );
+}
+
+function draw() {
+    // mirrorPass.material.uniforms[ "side" ].value = 0;
+    texture.needsUpdate = true;
+    requestAnimationFrame( draw );
+    renderer.render( scene, camera );    
+    // composer.render( 0.1);
 }
 
 $( document ).ready(function() {
     init();
+    draw();
 });
 
 var isRecording = false;
 
-$(document).keydown(function(e) {    
-    if(e.keyCode == 13) {
-        if(!isRecording) {
-            isRecording = true;
-            startRecording(stream);
-        } else {
-            stopRecording();
-        }
-    }
+$(document).keydown(function(e) {        
+    if(e.keyCode !== 13) return;
     
-    if(e.keyCode == 32) {
-        if(rtc.state === 'paused') {
-            rtc.resumeRecording();
-        } else {
-            rtc.pauseRecording();
-        }
+    if(rtc === undefined || rtc.state === 'stopped' || rtc.state === 'inactive') {
+        // startRecording(stream);
+        recordCanvas();
+    } else if(rtc.state === 'recording') {
+        rtc.pauseRecording();
+    } else if(rtc.state === 'paused') {
+        rtc.resumeRecording();
     }
-  
-
-    // setTimeout(stopRecording, recordingLength);    
 });

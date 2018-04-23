@@ -23,12 +23,14 @@
     "johnny-five": "^0.14.3",
     "jquery": "^3.3.1",
     "node-uuid": "^1.4.8",
+    "postprocessing": "^4.4.2",
     "recordrtc": "^5.4.6",
     "recordrtc-nodejs": "^1.0.6",
     "request": "^2.85.0",
     "restler": "^3.4.0",
     "restler-base": "^3.4.5",
     "socket.io": "^2.1.0",
+    "three": "^0.92.0",
     "watchify": "^3.11.0"
   }
 }
