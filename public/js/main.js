@@ -2,6 +2,7 @@ var $ = require("jquery");
 var RecordRTC = require('recordrtc');
 var socketio = io();
 var THREE = require('three');
+require('jquery-circle-progress');
 
 var rtc;
 var videoElement = $('#video')[0];
@@ -71,6 +72,8 @@ function recordCanvas() {
     });
 
     rtc.setRecordingDuration(recordingLength).onRecordingStopped(function(url) {
+        $('#circle').hide();
+
         isRecording = false;
         videoElement.srcObject = null;
         videoElement.src = url;
@@ -229,6 +232,16 @@ function init() {
 
     renderer.setSize( window.innerWidth, window.innerHeight );
     document.body.appendChild( renderer.domElement );    
+
+    $('#circle').circleProgress({
+        value: 0,
+        size: 80,
+        animation: false,
+        thickness: 40,
+        fill: {
+          gradient: ["red", "orange"]
+        }
+      });
 }
 
 function setRandomMirror() {
@@ -241,10 +254,22 @@ function onWindowResize() {
     camera.updateProjectionMatrix();
     renderer.setSize( window.innerWidth, window.innerHeight );
 }
+var clock = new THREE.Clock();
+var delta = 0;
+var recordingTime = 0;
+var recordingProgress = 0;
+
 
 function draw() {
     requestAnimationFrame( draw );
     renderer.render( scene, camera );    
+
+    delta = clock.getDelta();
+    if(rtc !== undefined && rtc.state === 'recording') {
+        recordingTime += delta;    
+        recordingProgress = (1.0 / 5.0) * recordingTime;   
+        $('#circle').circleProgress('value', recordingProgress);             
+    }
 }
 
 $( document ).ready(function() {
@@ -252,14 +277,13 @@ $( document ).ready(function() {
     draw();
 });
 
-var isRecording = false;
-
 $(document).keydown(function(e) {        
     if(e.keyCode !== 13) return;
     
     if(rtc === undefined || rtc.state === 'stopped' || rtc.state === 'inactive') {
-        // startRecording(stream);
+        // startRecording(stream);        
         recordCanvas();
+        // updateProgress();
     } else if(rtc.state === 'recording') {
         rtc.pauseRecording();
     } else if(rtc.state === 'paused') {

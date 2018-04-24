@@ -3,6 +3,7 @@ body {
     margin: 0;
     padding: 0;
     overflow: hidden;
+    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
 }
 
 video {
@@ -13,4 +14,10 @@ video {
      color: white;
      text-align: center;
      font-size: 2em;
+ }
+
+ #circle {
+     position: absolute;
+     right: 30px;
+     top: 10px;
  }
