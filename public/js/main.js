@@ -26,40 +26,48 @@ socketio.on('uploaded', function(url) {
     // console.log('got file ' + url);
 });
 
-function startRecording(stream) {
-    // rtc = RecordRTC(stream, {
-    //     type: 'video'
-    // })
+document.addEventListener( 'mousewheel', onDocumentMouseWheel, false );
+document.addEventListener( 'mousedown', onDocumentMouseDown, false );
+
+function recordbutton() {
+    if(rtc === undefined || rtc.state === 'inactive') {
+        // startRecording(stream);        
+        recordCanvas();
+        // updateProgress();
+    } else if(rtc.state === 'recording') {
+        rtc.pauseRecording();
+    } else if(rtc.state === 'paused') {
+        rtc.resumeRecording();
+    } else if(rtc.state === 'stopped') {
+        rtc.clearRecordedData();   
+        location.reload();
+    }   
+}
+
+function onDocumentMouseDown(event) {
+    event.preventDefault();
+
+    switch(event.button) {
+        case 0:
+            recordbutton();
+            break;
+        case 2:
+            if(rtc) rtc.clearRecordedData();            
+            location.reload();
+    }
+
+ 
+}
 
 
-    // // var options = {
-    // //     // recorderType: MediaStreamRecorder,
-    // //     mimeType: 'video/webm\;codecs=vp9',
-    // //     bitsPerSecond: 256 * 8 * 1024,
-    // //     checkForInactiveTracks: true
-    // // };
 
-    // // rtc = RecordRTC(stream, options);
-
-    // rtc.setRecordingDuration(recordingLength).onRecordingStopped(function(url) {
-    //     isRecording = false;
-    //     videoElement.srcObject = null;
-    //     videoElement.src = url;
-    //     videoElement.muted = false;
-    //     videoElement.play();
-
-    //     if(UPLOAD) {
-    //         rtc.getDataURL(function(dataURL) {
-    //             uploadVideoToServer(dataURL);
-    //         }); 
-    //     } else {
-    //         console.log("!!!!!HEY NOT UPLOADING!!!!");
-    //     }
-
-    //     rtc.clearRecordedData();        
-    // });
-
-    // rtc.startRecording();
+function onDocumentMouseWheel( event ) {
+    if(event.wheelDeltaY > 0) {
+        lastMirror();
+        console.log('up');
+    } else {
+        nextMirror();
+    }
 }
 
 function recordCanvas() {
@@ -67,7 +75,7 @@ function recordCanvas() {
         type: 'video',
         mimeType: 'video/webm\;codecs=vp9',
         checkForInactiveTracks: true,
-        bitsPerSecond: 256 * 8 * 1024,
+        // bitsPerSecond: 256 * 8 * 1024,
         showMousePointer: false
     });
 
@@ -244,6 +252,20 @@ function init() {
       });
 }
 
+function nextMirror() {
+    material.uniforms.side.value++;
+    if(material.uniforms.side.value > 7) {
+        material.uniforms.side.value = 0;
+    }
+}
+
+function lastMirror() {
+    material.uniforms.side.value--;
+    if(material.uniforms.side.value < 0) {
+        material.uniforms.side.value = 7;
+    }
+}
+
 function setRandomMirror() {
     material.uniforms.side.value = THREE.Math.randInt(0, 7);
     // console.log(material.uniforms["side"]);
@@ -279,16 +301,6 @@ $( document ).ready(function() {
 
 $(document).keydown(function(e) {        
     if(e.keyCode !== 13) return;
-    
-    if(rtc === undefined || rtc.state === 'stopped' || rtc.state === 'inactive') {
-        // startRecording(stream);        
-        recordCanvas();
-        // updateProgress();
-    } else if(rtc.state === 'recording') {
-        rtc.pauseRecording();
-    } else if(rtc.state === 'paused') {
-        rtc.resumeRecording();
-    } else if(rtc.state === 'stopped') {
-        init();
-    }
+
+
 });
