@@ -109,11 +109,13 @@ function onDocumentMouseWheel( event ) {
 }
 
 function recordCanvas() {
-    rtc = RecordRTC(finalStream, {
-        type: 'video',
+    rtc = RecordRTC(renderer.domElement, {
+        type: 'canvas',
         mimeType: 'video/webm\;codecs=vp9',
-        checkForInactiveTracks: true,
-        // bitsPerSecond: 256 * 8 * 1024,
+        // type: 'video',
+        // mimeType: 'video/webm\;codecs=vp9',
+        // checkForInactiveTracks: true,
+        // // bitsPerSecond: 256 * 8 * 1024,
         showMousePointer: false
     });
 
