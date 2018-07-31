@@ -34,6 +34,7 @@ public class Webcam : MonoBehaviour {
         transform.localScale = new Vector3(quadWidth, quadHeight, 1);
 
         webcamTexture = new WebCamTexture(1600, 869, 30);
+        webcamTexture.hideFlags = HideFlags.HideAndDontSave;
 
         ren = GetComponent<Renderer>();        
         StartCam();
