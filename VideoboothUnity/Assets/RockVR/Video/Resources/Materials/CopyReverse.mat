@@ -8,7 +8,7 @@ Material:
   m_PrefabInternal: {fileID: 0}
   m_Name: CopyReverse
   m_Shader: {fileID: 4800000, guid: 969273fd8374b2147b215100fbc27c59, type: 3}
-  m_ShaderKeywords: REVERSE_LEFT_RIGHT _EMISSION
+  m_ShaderKeywords: _EMISSION
   m_LightmapFlags: 1
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0

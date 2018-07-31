@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using UnityEngine.XR.WSA.WebCam;
 
@@ -19,6 +20,12 @@ public class Webcam : MonoBehaviour {
 
     public bool Replaying = false;
 
+    public Image Recording;
+    public Image Pause;
+
+    private Color Clear = new Color(1, 1, 1, 0);
+    private Color White = new Color(1, 1, 1, 1);
+
 	void Start () {
         var quadHeight = Camera.main.orthographicSize * 2f;
         var quadWidth = quadHeight * Screen.width / Screen.height;
@@ -28,6 +35,10 @@ public class Webcam : MonoBehaviour {
 
         ren = GetComponent<Renderer>();        
         StartCam();
+
+        
+        if(Recording) UpdateColor(0);
+        if(Pause) Pause.color = Clear;
 	}
 	
     public void StopCam() {
@@ -89,13 +100,20 @@ public class Webcam : MonoBehaviour {
 
     public void Record() {
         if(CaptureControl.status == VideoCaptureCtrlBase.StatusType.STARTED) {
-            CaptureControl.StopCapture();                                         
+            CaptureControl.StopCapture(); 
+            iTween.Stop();
+            Recording.color = Clear;
         } else {
-            //VideoPlayer.instance.enabled = false;
             CaptureControl.StartCapture();
+            float flashSpeed = 0.5f;
+            iTween.ValueTo(gameObject, iTween.Hash("from", 0f, "to", 1f, "time", flashSpeed, "easeType", iTween.EaseType.linear, "loopType", iTween.LoopType.pingPong, "onUpdate", "UpdateColor"));
         }
 
 
         
+    }
+
+    public void UpdateColor(float value) {
+        Recording.color = new Color(White.r, White.g, White.b, value);
     }
 }
