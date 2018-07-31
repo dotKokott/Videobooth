@@ -26,6 +26,8 @@ public class Webcam : MonoBehaviour {
     private Color Clear = new Color(1, 1, 1, 0);
     private Color White = new Color(1, 1, 1, 1);
 
+    public string SavePath = "";
+
 	void Start () {
         var quadHeight = Camera.main.orthographicSize * 2f;
         var quadWidth = quadHeight * Screen.width / Screen.height;
@@ -39,6 +41,8 @@ public class Webcam : MonoBehaviour {
         
         if(Recording) UpdateColor(0);
         if(Pause) Pause.color = Clear;
+
+        PathConfig.SaveFolder = SavePath;
 	}
 	
     public void StopCam() {

@@ -753,3 +753,4 @@ MonoBehaviour:
   Replaying: 0
   Recording: {fileID: 835171031}
   Pause: {fileID: 1507297400}
+  SavePath: E:\VideoCaptures\
