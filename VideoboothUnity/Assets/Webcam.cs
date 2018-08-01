@@ -28,6 +28,8 @@ public class Webcam : MonoBehaviour {
 
     public string SavePath = "";
 
+	private AudioSource microphone;
+
 	void Start () {
         var quadHeight = Camera.main.orthographicSize * 2f;
         var quadWidth = quadHeight * Screen.width / Screen.height;
@@ -36,6 +38,13 @@ public class Webcam : MonoBehaviour {
         webcamTexture = new WebCamTexture(1600, 869, 30);
         webcamTexture.hideFlags = HideFlags.HideAndDontSave;
 
+		microphone = GetComponent<AudioSource> ();
+		microphone.clip = Microphone.Start ("Mikrofon", true, 10, 44100);
+		microphone.loop = true;
+
+		while (!(Microphone.GetPosition(null) > 0)){}
+
+		microphone.Play ();
         ren = GetComponent<Renderer>();        
         StartCam();
 
@@ -106,6 +115,7 @@ public class Webcam : MonoBehaviour {
     public void Record() {
         if(CaptureControl.status == VideoCaptureCtrlBase.StatusType.STARTED) {
             CaptureControl.StopCapture(); 
+			Microphone.End ("Mikrofon");
             iTween.Stop();
             Recording.color = Clear;
         } else {
