@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
-using UnityEngine.XR.WSA.WebCam;
 using System.Runtime.InteropServices;
 using System;
 
@@ -142,28 +141,35 @@ public class Webcam : MonoBehaviour {
 
             if(currentTimeFloat <= 0) {
                 CaptureControl.StopCapture(); 	
-                microphone.enabled = false;          
+                microphone.enabled = false;     
+                TimeText.text = "WAIT";
             }
+        }
+
+        if(Input.GetMouseButtonDown(1)) {
+            Restart();
         }
 
         if(Input.GetKeyDown(KeyCode.Space)) {
             if(Replaying) {
-                //Replaying = false;                                
-
-                VideoPlayer.instance.StopVideo();
-                CaptureControl.Refresh();                
-                
-                StopCam();
-
-                CaptureControl.RemoveInstance();
-                VideoPlayer.instance = null;
-
-                SceneManager.LoadScene(0);
+                Restart();
             } else {
                 Record();
             }            
         }
 	}
+
+    public void Restart() {
+        VideoPlayer.instance.StopVideo();
+        CaptureControl.Refresh();                
+                
+        StopCam();
+
+        CaptureControl.RemoveInstance();
+        VideoPlayer.instance = null;
+
+        SceneManager.LoadScene(0);
+    }
 
     public void Record() {
         if(CaptureControl.status == VideoCaptureCtrlBase.StatusType.STARTED) {
