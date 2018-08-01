@@ -6,6 +6,7 @@ using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using System.Runtime.InteropServices;
 using System;
+using System.IO;
 
 public class Webcam : MonoBehaviour {
 
@@ -86,6 +87,10 @@ public class Webcam : MonoBehaviour {
 		microphone.Play ();
         ren = GetComponent<Renderer>();        
         StartCam();      
+
+        if(File.Exists("savepath.txt")) {
+            SavePath = File.ReadAllText("savepath.txt");
+        }
 
         PathConfig.SaveFolder = SavePath;
 	}
